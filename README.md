@@ -4,11 +4,13 @@ Independent service images built from upstream sources and published to GHCR as 
 
 | Service | Build | Image |
 | --- | --- | --- |
-| Caddy | [`caddy/`](caddy/README.md) | `ghcr.io/miloszkolber/service-caddy` |
+| Caddy | [`caddy/`](caddy/README.md) | `ghcr.io/miloszkolber/caddy` |
 
 ## Build and release
 
 The Caddy workflow runs weekly on Monday at 03:17 UTC, and on relevant pushes, pull requests and manual dispatch. It resolves the latest stable Caddy release, the latest `caddy-dns/cloudflare` module version and the linux/amd64 digests of the builder and distroless runtime images. The image is built once, smoke-checked and scanned before the same candidate is published.
+
+Images use distroless nonroot runtimes, static stripped binaries and digest-pinned bases. The Caddy image adds only the Caddy binary, a static health probe and license files to the distroless base.
 
 Scheduled runs reuse the published `latest` image and repeat its smoke checks when the resolved inputs match its `io.service-build.inputs` label. A changed Caddy release, module version, base digest or build file produces a new candidate. Pushes and manual runs always build. Pull requests build and check without publishing.
 

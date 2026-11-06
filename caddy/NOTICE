@@ -1,4 +1,4 @@
-service-caddy
+caddy
 
 This image contains:
 - Caddy, https://github.com/caddyserver/caddy, Apache-2.0.

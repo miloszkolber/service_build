@@ -13,7 +13,7 @@ spec.loader.exec_module(publish)
 class ImageNameTests(unittest.TestCase):
     def test_lowercases_owner(self):
         with patch.dict(os.environ, {"GITHUB_REPOSITORY_OWNER": "MiloszKolber"}):
-            self.assertEqual(publish.image_name(), "ghcr.io/miloszkolber/service-caddy")
+            self.assertEqual(publish.image_name(), "ghcr.io/miloszkolber/caddy")
 
     def test_rejects_invalid_owner(self):
         with patch.dict(os.environ, {"GITHUB_REPOSITORY_OWNER": "../bad"}):

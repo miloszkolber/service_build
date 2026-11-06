@@ -92,7 +92,7 @@ jobs:
             --provenance=false \
             --sbom=false \
             --file caddy/Dockerfile \
-            --tag service-caddy:local \
+            --tag caddy:local \
             --load \
             --build-arg "BUILDER_IMAGE=$builder" \
             --build-arg "RUNTIME_IMAGE=$runtime" \
@@ -118,14 +118,14 @@ jobs:
             -e XDG_CONFIG_HOME=/tmp/caddy \
             -e CF_DNS_API_TOKEN=0000000000000000000000000000000000000000 \
             -v "$PWD/caddy/validate.Caddyfile:/etc/caddy/validate.Caddyfile:ro" \
-            service-caddy:local validate --config /etc/caddy/validate.Caddyfile --adapter caddyfile
+            caddy:local validate --config /etc/caddy/validate.Caddyfile --adapter caddyfile
           docker run -d --rm --name caddy-smoke \
             --tmpfs /tmp \
             -e HOME=/tmp \
             -e XDG_DATA_HOME=/tmp/caddy \
             -e XDG_CONFIG_HOME=/tmp/caddy \
             -v "$PWD/caddy/smoke.Caddyfile:/etc/caddy/smoke.Caddyfile:ro" \
-            service-caddy:local run --config /etc/caddy/smoke.Caddyfile --adapter caddyfile
+            caddy:local run --config /etc/caddy/smoke.Caddyfile --adapter caddyfile
           ready=false
           for _ in $(seq 1 30); do
             if docker exec caddy-smoke /usr/bin/caddy-healthcheck http://127.0.0.1:8080/healthz >/dev/null 2>&1; then
@@ -140,13 +140,13 @@ jobs:
           fi
           docker exec caddy-smoke /usr/bin/caddy version | grep -F "$caddy_version"
           docker exec caddy-smoke /usr/bin/caddy list-modules | grep -Fx 'dns.providers.cloudflare'
-          if docker run --rm --entrypoint /bin/sh service-caddy:local -c true >/dev/null 2>&1; then
+          if docker run --rm --entrypoint /bin/sh caddy:local -c true >/dev/null 2>&1; then
             echo 'runtime image unexpectedly contains a shell' >&2
             exit 1
           fi
       - name: Scan image
         run: |
-          docker save service-caddy:local -o candidate.tar
+          docker save caddy:local -o candidate.tar
           bash scripts/scan-image.sh candidate.tar
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -166,4 +166,4 @@ jobs:
           python3 scripts/publish.py publish \
             --fingerprint "${{ steps.fingerprint.outputs.value }}" \
             --tag "$caddy_version" \
-            --local service-caddy:local
+            --local caddy:local

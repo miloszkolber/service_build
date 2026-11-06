@@ -8,8 +8,8 @@ import sys
 
 LABEL = "io.service-build.inputs"
 PLATFORM = "linux/amd64"
-IMAGE = "service-caddy"
-LOCAL_IMAGE = "service-caddy:local"
+IMAGE = "caddy"
+LOCAL_IMAGE = "caddy:local"
 
 
 def command(*args):

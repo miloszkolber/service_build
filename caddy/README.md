@@ -4,9 +4,13 @@ Custom Caddy image with the Cloudflare DNS provider and a static health probe, b
 
 ## Image
 
-- `ghcr.io/miloszkolber/service-caddy:latest` plus the Caddy release tag.
+- `ghcr.io/miloszkolber/caddy:latest` plus the Caddy release tag.
 - Entrypoint `/usr/bin/caddy`; default command `run --config /etc/caddy/Caddyfile --adapter caddyfile`.
-- Distroless `static-debian12:nonroot` runtime as UID 65532, with no shell or package manager.
+- Distroless `static-debian12:nonroot` runtime as UID 65532, with no shell, package manager or OS utilities.
+- Both binaries are static (`CGO_ENABLED=0`), built with `-trimpath`, stripped symbols and no build VCS metadata.
+- The build uses BuildKit Go module/build caches; xcaddy keeps its standard `nobadger,nomysql,nopgx` storage exclusions.
+- The runtime layer adds only Caddy, the health probe and license files to the distroless base.
+- The image is about 21 MB compressed; most of it is the stripped Caddy binary.
 - `/usr/bin/caddy-healthcheck <URL>` exits non-zero unless the URL returns HTTP 200 without a redirect.
 - `/licenses/` carries the Apache-2.0 license and notice.
 
@@ -15,7 +19,7 @@ Custom Caddy image with the Cloudflare DNS provider and a static health probe, b
 The workflow passes resolved values and digest-pinned bases. Dockerfile defaults are bootstrapping values only; the workflow is authoritative.
 
 ```sh
-docker buildx build --platform linux/amd64 --file caddy/Dockerfile --tag service-caddy:local .
+docker buildx build --platform linux/amd64 --file caddy/Dockerfile --tag caddy:local .
 ```
 
 | Argument | Meaning |

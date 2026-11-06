@@ -6,7 +6,7 @@
 
 | Deliverable | Source | Artifact |
 | --- | --- | --- |
-| Caddy image | `caddy/Dockerfile`, `caddy/healthcheck/` | `ghcr.io/miloszkolber/service-caddy` |
+| Caddy image | `caddy/Dockerfile`, `caddy/healthcheck/` | `ghcr.io/miloszkolber/caddy` |
 | Build inputs | `scripts/resolve_caddy.py`, `scripts/fingerprint.py` | Resolved JSON, fingerprint and OCI labels |
 | Release pipeline | `.github/workflows/caddy.yml`, `scripts/publish.py` | `latest` and Caddy release tags |
 
