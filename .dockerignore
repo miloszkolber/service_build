@@ -1,0 +1,12 @@
+.build
+.git
+.github
+openspec
+scripts
+tests
+*.md
+**/*.md
+**/__pycache__
+candidate.tar
+caddy.cdx.json
+caddy-vulnerabilities.json

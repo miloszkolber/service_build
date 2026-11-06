@@ -1,0 +1,8 @@
+service-caddy
+
+This image contains:
+- Caddy, https://github.com/caddyserver/caddy, Apache-2.0.
+- caddy-dns/cloudflare, https://github.com/caddy-dns/cloudflare, Apache-2.0.
+- The Go standard library and module dependencies compiled into Caddy, under their respective licenses.
+
+The full Apache-2.0 license text is in LICENSE. The upstream module graph owns its own license inventory.

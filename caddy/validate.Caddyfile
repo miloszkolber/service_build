@@ -1,0 +1,11 @@
+{
+	admin off
+	email test@example.invalid
+}
+
+https://caddy.example.invalid {
+	tls {
+		dns cloudflare {$CF_DNS_API_TOKEN}
+	}
+	respond "ok"
+}

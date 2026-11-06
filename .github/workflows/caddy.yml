@@ -1,0 +1,169 @@
+name: Caddy image
+on:
+  push:
+    branches: [main]
+    paths: ['caddy/Dockerfile', 'caddy/healthcheck/**', 'caddy/LICENSE', 'caddy/NOTICE', 'caddy/smoke.Caddyfile', 'caddy/validate.Caddyfile', 'scripts/resolve_caddy.py', 'scripts/fingerprint.py', 'scripts/publish.py', 'scripts/scan-image.sh', '.dockerignore', '.github/workflows/caddy.yml']
+  pull_request:
+    paths: ['caddy/Dockerfile', 'caddy/healthcheck/**', 'caddy/LICENSE', 'caddy/NOTICE', 'caddy/smoke.Caddyfile', 'caddy/validate.Caddyfile', 'scripts/resolve_caddy.py', 'scripts/fingerprint.py', 'scripts/publish.py', 'scripts/scan-image.sh', '.dockerignore', '.github/workflows/caddy.yml']
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      caddy_version:
+        description: Optional stable Caddy release tag (for example v2.11.9)
+        type: string
+        default: ''
+permissions:
+  contents: read
+concurrency:
+  group: caddy-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test build policy
+        run: python3 -m unittest discover -s tests
+      - name: Resolve Caddy inputs
+        id: inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/resolve_caddy.py \
+            --caddy-version "${{ inputs.caddy_version }}" \
+            --output .build/caddy-inputs.json
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.0.0
+      - name: Resolve base-image digests
+        id: bases
+        env:
+          CADDY_VERSION: ${{ steps.inputs.outputs.caddy_version }}
+        run: |
+          set -euo pipefail
+          mkdir -p .build
+          builder="caddy:${CADDY_VERSION#v}-builder"
+          runtime="gcr.io/distroless/static-debian12:nonroot"
+          digest() {
+            docker buildx imagetools inspect "$1" --format '{{json .Manifest}}' |
+              jq -er 'if .manifests then (.manifests[] | select(.platform.os == "linux" and .platform.architecture == "amd64") | .digest) else .digest end'
+          }
+          builder_digest=$(digest "$builder")
+          runtime_digest=$(digest "$runtime")
+          for value in "$builder_digest" "$runtime_digest"; do
+            [[ "$value" =~ ^sha256:[0-9a-f]{64}$ ]]
+          done
+          jq -n --arg builder "$builder@$builder_digest" --arg runtime "$runtime@$runtime_digest" \
+            '{builder: $builder, runtime: $runtime}' > .build/bases.json
+      - name: Fingerprint build inputs
+        id: fingerprint
+        run: |
+          python3 scripts/fingerprint.py \
+            --inputs .build/caddy-inputs.json \
+            --bases .build/bases.json \
+            --output .build/fingerprint.txt
+          echo "value=$(cat .build/fingerprint.txt)" >> "$GITHUB_OUTPUT"
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Reuse an unchanged scheduled image
+        id: existing
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+        run: python3 scripts/publish.py check --fingerprint "${{ steps.fingerprint.outputs.value }}"
+      - name: Build candidate
+        if: steps.existing.outputs.unchanged != 'true'
+        env:
+          FINGERPRINT: ${{ steps.fingerprint.outputs.value }}
+        run: |
+          set -euo pipefail
+          builder=$(jq -r .builder .build/bases.json)
+          runtime=$(jq -r .runtime .build/bases.json)
+          caddy_version=$(jq -r .caddy.version .build/caddy-inputs.json)
+          module=$(jq -r '.cloudflare_dns.module + "@" + .cloudflare_dns.version' .build/caddy-inputs.json)
+          docker buildx build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --sbom=false \
+            --file caddy/Dockerfile \
+            --tag service-caddy:local \
+            --load \
+            --build-arg "BUILDER_IMAGE=$builder" \
+            --build-arg "RUNTIME_IMAGE=$runtime" \
+            --build-arg "CADDY_VERSION=$caddy_version" \
+            --build-arg "CLOUDFLARE_DNS_MODULE=$module" \
+            --label "io.service-build.inputs=$FINGERPRINT" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "org.opencontainers.image.version=$caddy_version" \
+            --cache-from "type=gha,scope=caddy" \
+            --cache-to "type=gha,scope=caddy,mode=max,ignore-error=true" \
+            .
+      - name: Smoke-test candidate
+        run: |
+          set -euo pipefail
+          caddy_version=$(jq -r .caddy.version .build/caddy-inputs.json)
+          docker rm -f caddy-smoke >/dev/null 2>&1 || true
+          trap 'docker rm -f caddy-smoke >/dev/null 2>&1 || true' EXIT
+          docker run --rm \
+            --tmpfs /tmp \
+            -e HOME=/tmp \
+            -e XDG_DATA_HOME=/tmp/caddy \
+            -e XDG_CONFIG_HOME=/tmp/caddy \
+            -e CF_DNS_API_TOKEN=0000000000000000000000000000000000000000 \
+            -v "$PWD/caddy/validate.Caddyfile:/etc/caddy/validate.Caddyfile:ro" \
+            service-caddy:local validate --config /etc/caddy/validate.Caddyfile --adapter caddyfile
+          docker run -d --rm --name caddy-smoke \
+            --tmpfs /tmp \
+            -e HOME=/tmp \
+            -e XDG_DATA_HOME=/tmp/caddy \
+            -e XDG_CONFIG_HOME=/tmp/caddy \
+            -v "$PWD/caddy/smoke.Caddyfile:/etc/caddy/smoke.Caddyfile:ro" \
+            service-caddy:local run --config /etc/caddy/smoke.Caddyfile --adapter caddyfile
+          ready=false
+          for _ in $(seq 1 30); do
+            if docker exec caddy-smoke /usr/bin/caddy-healthcheck http://127.0.0.1:8080/healthz >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then
+            docker logs caddy-smoke
+            exit 1
+          fi
+          docker exec caddy-smoke /usr/bin/caddy version | grep -F "$caddy_version"
+          docker exec caddy-smoke /usr/bin/caddy list-modules | grep -Fx 'dns.providers.cloudflare'
+          if docker run --rm --entrypoint /bin/sh service-caddy:local -c true >/dev/null 2>&1; then
+            echo 'runtime image unexpectedly contains a shell' >&2
+            exit 1
+          fi
+      - name: Scan image
+        run: |
+          docker save service-caddy:local -o candidate.tar
+          bash scripts/scan-image.sh candidate.tar
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: caddy-evidence
+          path: |
+            .build/caddy-inputs.json
+            .build/bases.json
+            .build/fingerprint.txt
+            caddy.cdx.json
+            caddy-vulnerabilities.json
+          retention-days: 14
+      - name: Publish checked image
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.existing.outputs.unchanged != 'true'
+        run: |
+          caddy_version=$(jq -r .caddy.version .build/caddy-inputs.json)
+          python3 scripts/publish.py publish \
+            --fingerprint "${{ steps.fingerprint.outputs.value }}" \
+            --tag "$caddy_version" \
+            --local service-caddy:local

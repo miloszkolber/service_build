@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+# No docker ecosystem: Caddy and distroless bases are digest-pinned build args
+# resolved weekly by scripts/resolve_caddy.py and the image workflow.
