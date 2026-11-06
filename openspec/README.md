@@ -7,7 +7,6 @@ This repository uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) to keep 
 | [specs/](specs/) | Implemented repository contracts, grouped by capability |
 | [changes/](changes/) | Scoped work with intent, tasks and evidence. Behavior changes also carry requirement deltas |
 | [backlog.md](backlog.md) | Deferred work and branch ownership, not implementation authorization |
-| [maintenance-state.md](maintenance-state.md) | Scheduled dependency-review notes and source-review findings |
 | [config.yaml](config.yaml) | Context and rules for OpenSpec artifact instructions |
 
 ## Capability map
@@ -26,7 +25,7 @@ Specs state the contract, not a claim that every scenario has been executed. Bui
 3. Add technical design only for consequential choices. Track small, verifiable tasks in `tasks.md`. Keep verification and documentation with the work they check.
 4. Review scope before implementation. Revise artifacts as evidence changes. A proposal is not permission to deploy, restart services or begin paused work.
 5. Verify implementation against scenarios. Record commands, results and gaps in `evidence.md`. A checkbox or structural validation is not runtime acceptance.
-6. After verification and review, archive the change with OpenSpec. It merges completed deltas into main specs and moves the change under `changes/archive/YYYY-MM-DD-<name>/`. Validate the resulting main specs. Completed archives are periodically consolidated into the single change history to keep the record readable; full detail stays recoverable from git history.
+6. After verification and review, archive the change with OpenSpec. It merges completed deltas into main specs and moves the change under `changes/archive/YYYY-MM-DD-<name>/`. Validate the resulting main specs. Full detail stays recoverable from git history.
 
 Use `## Purpose`, `## Requirements`, `### Requirement: Name`, and `#### Scenario: Name` in main specs. Requirements use SHALL or MUST and describe observable outcomes. Scenarios use **GIVEN**, **WHEN**, **THEN** and **AND**. Delta sections are ADDED, MODIFIED, REMOVED or RENAMED Requirements. MODIFIED replaces the **whole** requirement, including its retained scenarios.
 

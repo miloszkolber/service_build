@@ -24,5 +24,5 @@ Dependabot proposes weekly GitHub Actions updates. Docker bases and upstream rel
 | --- | --- |
 | [`caddy/`](caddy/README.md) | Caddy image, health probe, smoke configuration and build commands |
 | [`scripts/`](scripts/) | Input resolution, fingerprinting, publication, scanning and documentation checks |
-| [`openspec/`](openspec/README.md) | Implemented contracts, deferred backlog and maintenance state |
+| [`openspec/`](openspec/README.md) | Implemented contracts and deferred backlog |
 | [`.github/workflows/`](.github/workflows/) | Caddy image and documentation workflows |
