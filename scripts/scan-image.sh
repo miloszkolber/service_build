@@ -7,7 +7,7 @@ cache=$(mktemp -d)
 trap 'rm -rf "$cache"' EXIT
 trivy() {
     docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
-        -v "$PWD:/work" -v "$cache:/cache" aquasec/trivy:0.76.0 --cache-dir /cache "$@"
+        -v "$PWD:/work" -v "$cache:/cache" aquasec/trivy:0.76.2 --cache-dir /cache "$@"
 }
 ready=false
 for attempt in 1 2 3; do

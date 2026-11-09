@@ -23,6 +23,7 @@ BUILD_INPUTS = (
     "scripts/resolve_caddy.py",
     "scripts/fingerprint.py",
     "scripts/publish.py",
+    "scripts/scan-image.sh",
     ".github/workflows/caddy.yml",
 )
 DOCUMENTATION_SUFFIXES = (".md",)

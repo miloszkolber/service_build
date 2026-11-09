@@ -9,6 +9,7 @@ Custom Caddy image with the Cloudflare DNS provider and a static health probe, b
 - Distroless `static-debian12:nonroot` runtime as UID 65532, with no shell, package manager or OS utilities.
 - Both binaries are static (`CGO_ENABLED=0`), built with `-trimpath`, stripped symbols and no build VCS metadata.
 - The build uses BuildKit Go module/build caches; xcaddy keeps its standard `nobadger,nomysql,nopgx` storage exclusions.
+- The build replaces x/net v0.60.0 with v0.62.0 and klauspost/compress v1.20.1 with v1.20.3 for upstream security fixes. The replacements apply only to those exact versions and should be removed once supported Caddy releases no longer need them.
 - The runtime layer adds only Caddy, the health probe and license files to the distroless base.
 - The image is about 21 MB compressed; most of it is the stripped Caddy binary.
 - `/usr/bin/caddy-healthcheck <URL>` exits non-zero unless the URL returns HTTP 200 without a redirect.

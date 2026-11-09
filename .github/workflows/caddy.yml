@@ -39,7 +39,7 @@ jobs:
           python3 scripts/resolve_caddy.py \
             --caddy-version "${{ inputs.caddy_version }}" \
             --output .build/caddy-inputs.json
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.0.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Resolve base-image digests
         id: bases
         env:

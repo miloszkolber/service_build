@@ -10,6 +10,9 @@ spec.loader.exec_module(fingerprint)
 
 
 class FingerprintTests(unittest.TestCase):
+    def test_scanner_is_a_fingerprinted_build_input(self):
+        self.assertIn("scripts/scan-image.sh", fingerprint.BUILD_INPUTS)
+
     def test_stable_and_input_sensitive(self):
         inputs = {"caddy": {"version": "v2.11.9", "commit": "a" * 40}}
         bases = {"builder": "caddy:2.11.9-builder@sha256:" + "b" * 64}

@@ -15,7 +15,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     xcaddy build "${CADDY_VERSION}" \
         --output /usr/bin/caddy \
-        --with "${CLOUDFLARE_DNS_MODULE}"
+        --with "${CLOUDFLARE_DNS_MODULE}" \
+        --replace 'golang.org/x/net@v0.60.0=golang.org/x/net@v0.62.0' \
+        --replace 'github.com/klauspost/compress@v1.20.1=github.com/klauspost/compress@v1.20.3'
 
 COPY caddy/healthcheck /src/healthcheck
 WORKDIR /src/healthcheck
