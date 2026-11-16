@@ -39,14 +39,14 @@ For acceptance-only or documentation-only work, use `skip_specs: true` in `.open
 bun scripts/check-docs.mjs
 bun test scripts/check-docs.test.mjs
 python3 -m unittest discover -s tests
-OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.17.0 validate --all --strict
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@2.0.0 validate --all --strict
 ```
 
 After verification and review, merge deltas and archive with:
 
 ```sh
-OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.17.0 archive <name>
-OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.17.0 validate --all --strict
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@2.0.0 archive <name>
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@2.0.0 validate --all --strict
 ```
 
 Use `--skip-specs` only for changes with no deltas or deltas already merged and reviewed. Never use it to omit required updates. Never use `--no-validate` to hide an archive failure.
