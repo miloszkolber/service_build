@@ -23,6 +23,6 @@ jobs:
       - run: bun scripts/check-docs.mjs
       - run: bun test scripts/check-docs.test.mjs
       - run: python3 -m unittest discover -s tests
-      - run: bun x --bun @fission-ai/openspec@1.16.0 validate --all --strict
+      - run: bun x --bun @fission-ai/openspec@1.17.0 validate --all --strict
         env:
           OPENSPEC_TELEMETRY: '0'
